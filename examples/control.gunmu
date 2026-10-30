@@ -1,0 +1,44 @@
+module demo.control
+
+fn classify(value: Int) -> Unit {
+    match value {
+        0 => {
+            print "zero"
+        }
+        n if n > 0 => {
+            print "positive"
+            print n
+        }
+        _ => {
+            print "negative"
+        }
+    }
+    return unit
+}
+
+fn count_to_ten() -> Unit {
+    loop (i = 0)
+    with {
+        invariant i >= 0
+        invariant i <= 10
+        variant 10 - i
+    } {
+        match i {
+            10 => {
+                break
+            }
+            _ => {
+                continue (i = i + 1)
+            }
+        }
+    }
+    return unit
+}
+
+fn main() -> Unit {
+    classify(-1)
+    classify(0)
+    classify(1)
+    count_to_ten()
+    return unit
+}

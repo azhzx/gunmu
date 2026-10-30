@@ -1,0 +1,25 @@
+module demo.proofs
+
+theorem add_zero(x: Int): x + 0 == x
+proof {
+    simp
+}
+
+theorem positive_successor(x: Int)
+requires x >= 0
+: x + 1 > x
+proof {
+    omega
+}
+
+theorem sum_non_negative(a: Int, b: Int)
+requires a >= 0 and b >= 0
+: a + b >= 0
+proof {
+    omega
+}
+
+theorem impossible_claim(x: Int): x > x + 1
+proof {
+    omega
+}

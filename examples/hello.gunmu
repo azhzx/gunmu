@@ -1,0 +1,8 @@
+module demo.hello
+
+fn main() -> Unit {
+    print "hello, gunmu"
+    print 42
+    print true
+    return unit
+}

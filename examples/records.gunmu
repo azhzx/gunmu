@@ -1,0 +1,22 @@
+module demo.records
+
+record Point {
+    x: Int
+    y: Int
+}
+
+fn horizontal(point: Point) -> Int {
+    let x = point.x
+    return x
+}
+
+fn main() -> Unit {
+    let point = Point {
+        x: 10,
+        y: 20,
+    }
+    let x = 1 + 1
+    print point.x
+    print point.y
+    return unit
+}

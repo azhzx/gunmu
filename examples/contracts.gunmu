@@ -1,0 +1,180 @@
+module demo.contracts
+
+// `requires` is assumed on entry and checked at every call site. `ensures` is
+// proved on every way out of the body and assumed by callers. Both are
+// discharged by `verify_module`.
+
+fn add_one(value: Int) -> Int
+requires value >= 0
+ensures result > value
+{
+    let next = value + 1
+    return next
+}
+
+// The caller needs nothing of its own beyond what it already assumes: the
+// postcondition of `add_one` carries `value` through to `twice`.
+fn add_twice(value: Int) -> Int
+requires value >= 0
+ensures result > value
+{
+    let once = add_one(value)
+    let twice = add_one(once)
+    return twice
+}
+
+// An `assert` is proved where it stands and assumed by everything after it.
+fn report(value: Int) -> Int
+requires value >= 0
+ensures result > value
+{
+    assert value >= 0
+    let bigger = add_one(value)
+    assert bigger > value
+    return bigger
+}
+
+// A loop needs an invariant to re-establish at `continue`, and a variant that
+// strictly decreases while staying non-negative. Both bounds below are needed.
+fn count_to_ten() -> Unit
+{
+    loop (i = 0)
+    with {
+        invariant i >= 0
+        invariant i <= 10
+        variant 10 - i
+    } {
+        match i {
+            10 => {
+                break
+            }
+            _ => {
+                continue (i = i + 1)
+            }
+        }
+    }
+    return unit
+}
+
+// Mutual recursion: each function verifies against its own contract, discharged
+// inductively through the recursion, and each call respects the other's
+// precondition.
+fn is_even(n: Int) -> Bool
+requires n >= 0
+{
+    match n {
+        0 => {
+            return true
+        }
+        _ => {
+            let smaller = n - 1
+            return is_odd(smaller)
+        }
+    }
+    return false
+}
+
+fn is_odd(n: Int) -> Bool
+requires n >= 0
+{
+    match n {
+        0 => {
+            return false
+        }
+        _ => {
+            let smaller = n - 1
+            return is_even(smaller)
+        }
+    }
+    return true
+}
+
+// --------------------------------------------------------------- not verified
+//
+// The rest of this file does not verify. Each failure below is the verifier
+// doing its job, and the diagnostic names the obligation that broke.
+
+fn claim_positive(value: Int) -> Int
+requires value >= 0
+ensures result >= 0
+{
+    // `0 - value` is negative for every value the precondition allows.
+    let negated = 0 - value
+    return negated
+}
+
+fn missing_upper_bound() -> Unit
+{
+    // Without `invariant i <= 10` the variant `10 - i` is free to go negative.
+    loop (i = 0)
+    with {
+        invariant i >= 0
+        variant 10 - i
+    } {
+        match i {
+            10 => {
+                break
+            }
+            _ => {
+                continue (i = i + 1)
+            }
+        }
+    }
+    return unit
+}
+
+fn spins_forever() -> Unit
+{
+    // The body never breaks, continues or returns, so the variant cannot
+    // decrease on any path out of it.
+    loop (i = 0)
+    with {
+        invariant i >= 0
+        invariant i <= 10
+        variant 10 - i
+    } {
+        print i
+    }
+    return unit
+}
+
+fn no_invariant() -> Unit
+{
+    loop (i = 0) {
+        continue (i = i + 1)
+    }
+    return unit
+}
+
+fn broken_recursion(n: Int) -> Unit
+requires n >= 0
+{
+    match n {
+        0 => {
+            return unit
+        }
+        _ => {
+            // `0 - n` is negative here, so the call breaks `countdown`'s
+            // precondition.
+            let negated = 0 - n
+            countdown(negated)
+            return unit
+        }
+    }
+    return unit
+}
+
+fn countdown(n: Int) -> Unit
+requires n >= 0
+{
+    match n {
+        0 => {
+            return unit
+        }
+        _ => {
+            countdown(n + 1)
+            return unit
+        }
+    }
+    return unit
+}
